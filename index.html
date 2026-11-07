@@ -1,1160 +1,688 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>金融機構專業計算器 (真實現金流版)</title>
-<style>
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #f8f9fa;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 40px 20px;
-}
-
-.calculator-container {
-    background-color: #1a1a1a;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 800px;
-    padding: 32px;
-    color: #e0e0e0;
-}
-
-.calculator-header {
-    text-align: center;
-    margin-bottom: 32px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 20px;
-}
-
-.calculator-header h1 {
-    color: #ffffff;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
-.calculator-header p {
-    color: #888;
-    font-size: 13px;
-    margin-top: 6px;
-}
-
-.module {
-    background: #222;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    border: 1px solid #333;
-}
-
-.module-title {
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.module-title .icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.module-title .icon.blue { background: #1e40af; }
-.module-title .icon.purple { background: #6b21a8; }
-.module-title .icon.green { background: #166534; }
-
-/* Loan Item Styles */
-.loan-item {
-    background: #2d2d2d;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: grid;
-    grid-template-columns: 30px 1fr 1fr 1fr 40px;
-    gap: 12px;
-    align-items: start;
-    position: relative;
-    border: 1px solid #3a3a3a;
-    transition: border-color 0.2s;
-}
-
-.loan-item.error {
-    border-color: #f87171;
-}
-
-.loan-item .item-number {
-    color: #888;
-    font-size: 12px;
-    font-weight: 600;
-    padding-top: 28px;
-    text-align: center;
-}
-
-.input-group {
-    min-width: 0;
-}
-
-.input-group label {
-    display: block;
-    color: #aaa;
-    font-size: 11px;
-    margin-bottom: 6px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.input-group input, .input-group select {
-    width: 100%;
-    background: #1a1a1a;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 10px 12px;
-    color: #ffffff;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.input-group input:focus, .input-group select:focus {
-    border-color: #60a5fa;
-}
-
-.input-group input.input-error {
-    border-color: #f87171;
-    background: #2a1a1a;
-}
-
-.rate-toggle-wrapper {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 6px;
-}
-
-.rate-toggle-btn {
-    flex: 1;
-    background: #1a1a1a;
-    border: 1px solid #444;
-    color: #888;
-    font-size: 11px;
-    padding: 6px;
-    cursor: pointer;
-    border-radius: 4px;
-    text-align: center;
-    transition: all 0.2s;
-}
-
-.rate-toggle-btn.active {
-    background: #1e40af;
-    border-color: #1e40af;
-    color: white;
-}
-
-.error-msg {
-    color: #f87171;
-    font-size: 10px;
-    margin-top: 4px;
-    min-height: 14px;
-    line-height: 1.2;
-}
-
-.btn-delete {
-    background: #3a3a3a;
-    border: none;
-    color: #f87171;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    margin-top: 24px;
-}
-
-.btn-delete:hover {
-    background: #4a2a2a;
-}
-
-.btn-add {
-    background: #1e40af;
-    border: none;
-    color: #ffffff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    transition: background 0.2s;
-    width: 100%;
-    margin-top: 8px;
-}
-
-.btn-add:hover {
-    background: #1d4ed8;
-}
-
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.summary-item {
-    background: #2d2d2d;
-    border-radius: 8px;
-    padding: 14px;
-    border: 1px solid #3a3a3a;
-}
-
-.summary-item .label {
-    color: #888;
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.summary-item .value {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.summary-item .value.green { color: #4ade80; }
-.summary-item .value.red { color: #f87171; }
-.summary-item .value.blue { color: #60a5fa; }
-.summary-item .value.yellow { color: #fbbf24; }
-
-/* Timeline Table Styles */
-.timeline-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    font-size: 13px;
-}
-
-.timeline-table th {
-    text-align: left;
-    color: #888;
-    font-weight: 500;
-    padding: 8px;
-    border-bottom: 1px solid #444;
-    font-size: 11px;
-    text-transform: uppercase;
-}
-
-.timeline-table td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #333;
-    color: #e0e0e0;
-}
-
-.timeline-table tr:last-child td {
-    border-bottom: none;
-}
-
-.timeline-table .highlight-row {
-    background: #2a2a2a;
-}
-
-.timeline-table .val-blue { color: #60a5fa; font-weight: 600; }
-.timeline-table .val-red { color: #f87171; font-weight: 600; }
-.timeline-table .val-green { color: #4ade80; font-weight: 600; }
-
-.slider-group {
-    margin-bottom: 20px;
-}
-
-.slider-group label {
-    display: block;
-    color: #aaa;
-    font-size: 12px;
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.slider-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.slider-row input[type="range"] {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: #444;
-    border-radius: 3px;
-    outline: none;
-}
-
-.slider-row input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #60a5fa;
-    cursor: pointer;
-    border: 2px solid #1a1a1a;
-}
-
-.slider-row input[type="number"] {
-    width: 130px;
-    background: #1a1a1a;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 8px 10px;
-    color: #ffffff;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    text-align: right;
-}
-
-.sim-disabled-msg {
-    background: #2d2d2d;
-    border: 1px solid #3a3a3a;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    color: #888;
-    font-size: 13px;
-}
-
-.sim-disabled-msg .highlight {
-    color: #60a5fa;
-    font-weight: 600;
-}
-
-.invest-input-group {
-    margin-bottom: 16px;
-}
-
-.invest-input-group label {
-    display: block;
-    color: #aaa;
-    font-size: 12px;
-    margin-bottom: 6px;
-    font-weight: 500;
-}
-
-.invest-input-group input {
-    width: 100%;
-    max-width: 280px;
-    background: #1a1a1a;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 10px 12px;
-    color: #ffffff;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.invest-input-group input:focus {
-    border-color: #60a5fa;
-}
-
-.invest-error-msg {
-    color: #f87171;
-    font-size: 11px;
-    margin-top: 4px;
-    min-height: 16px;
-}
-
-.invest-warning {
-    background: #2d2d2d;
-    border: 1px solid #fbbf24;
-    border-radius: 8px;
-    padding: 14px;
-    color: #fbbf24;
-    font-size: 13px;
-    margin-top: 12px;
-}
-
-.footer-note {
-    text-align: center;
-    color: #555;
-    font-size: 11px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #333;
-}
-
-@media (max-width: 700px) {
-    .calculator-container {
-        padding: 20px;
-    }
-    .loan-item {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .loan-item .item-number {
-        display: none;
-    }
-    .btn-delete {
-        margin-top: 0;
-        align-self: flex-end;
-    }
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-    .timeline-table {
-        font-size: 12px;
-    }
-    .timeline-table th, .timeline-table td {
-        padding: 6px 4px;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業資產配置與融資計算器 Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
+        
+        .asset-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
 </head>
-<body>
+<body class="text-gray-800 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
 
-<div class="calculator-container">
-    <div class="calculator-header">
-        <h1>FINANCIAL CALCULATOR PRO</h1>
-        <p>真實現金流分析 · 月平息/APR 雙模式 · 時間軸利息拆解</p>
-    </div>
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-indigo-900 mb-2">資產配置 & 融資模擬器</h1>
+                <p class="text-gray-500">區分現金流貸款與房貸 · 自訂多資產組合 · 真實淨值預測</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="saveScenario()" class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-all active:scale-95 text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    儲存方案
+                </button>
+                <button onclick="resetAll()" class="px-4 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm">重置</button>
+            </div>
+        </header>
 
-    <!-- Module 1: Multiple Loan Input -->
-    <div class="module">
-        <div class="module-title">
-            <span class="icon blue">①</span>
-            多筆借貸輸入 (真實現金流)
-        </div>
-        <div id="loanItemsContainer"></div>
-        <button class="btn-add" onclick="addLoanItem()">＋ 新增借貸項目</button>
-        
-        <div class="summary-grid" style="margin-bottom: 16px;">
-            <div class="summary-item">
-                <div class="label">總借貸本金</div>
-                <div class="value blue" id="totalLoanAmount">¥0</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">鎖定總利息成本 (Flat)</div>
-                <div class="value red" id="totalLockedInterest">¥0</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">加權 APR (僅供參考)</div>
-                <div class="value yellow" id="weightedAPR">0.000%</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">平均每年利息支出</div>
-                <div class="value green" id="avgYearlyInterest">¥0</div>
-            </div>
-        </div>
-
-        <!-- Timeline Breakdown -->
-        <div style="background: #2d2d2d; border-radius: 8px; padding: 16px; border: 1px solid #3a3a3a;">
-            <div style="color: #aaa; font-size: 12px; margin-bottom: 12px; font-weight: 600; text-transform: uppercase;">📅 利息支出時間軸 (真實現金流)</div>
-            <table class="timeline-table">
-                <thead>
-                    <tr>
-                        <th>階段</th>
-                        <th>時間範圍</th>
-                        <th>每月利息支出</th>
-                        <th>該階段年利息</th>
-                        <th>備註</th>
-                    </tr>
-                </thead>
-                <tbody id="timelineBody">
-                    <!-- Dynamic Rows -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Module 2: Simulated Loan -->
-    <div class="module">
-        <div class="module-title">
-            <span class="icon purple">②</span>
-            模擬借貸
-        </div>
-        <div id="simModuleContent">
-            <div class="slider-group">
-                <label>借貸金額（¥0 – ¥5,000,000）</label>
-                <div class="slider-row">
-                    <input type="range" id="simAmountSlider" min="0" max="5000000" step="10000" value="500000" oninput="syncSimAmount()">
-                    <input type="number" id="simAmountInput" min="0" max="5000000" step="10000" value="500000" oninput="syncSimSlider()">
-                </div>
-            </div>
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="slider-group">
-                    <label>還款年期（月）</label>
-                    <div class="slider-row">
-                        <input type="range" id="simTermSlider" min="12" max="60" step="12" value="36" oninput="syncSimTerm()">
-                        <input type="number" id="simTermInput" min="1" max="120" value="36" oninput="syncSimTermSlider()">
+            <!-- LEFT COLUMN: Inputs -->
+            <div class="xl:col-span-4 space-y-6">
+                
+                <!-- 1. Loans Section -->
+                <div class="glass-panel p-6 border-t-4 border-orange-500">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                        負債管理 (Liabilities)
+                    </h2>
+
+                    <!-- Loan Type Tabs -->
+                    <div class="flex mb-4 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchLoanTab('cash')" id="tabCash" class="flex-1 py-1.5 text-sm font-medium rounded-md bg-white shadow text-orange-600 transition">現金貸 (投資用)</button>
+                        <button onclick="switchLoanTab('mortgage')" id="tabMortgage" class="flex-1 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 transition">房貸 (物業)</button>
+                    </div>
+
+                    <!-- Add Loan Form -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <input type="number" id="newLoanAmt" placeholder="金額" class="p-2 text-sm border rounded w-full">
+                            <input type="number" id="newLoanRate" placeholder="年利率 %" step="0.1" class="p-2 text-sm border rounded w-full">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <input type="number" id="newLoanTerm" placeholder="期數(月)" class="p-2 text-sm border rounded w-full">
+                            <select id="newLoanType" class="p-2 text-sm border rounded w-full bg-white">
+                                <option value="apr">APR 等額本息</option>
+                                <option value="flat">月平息 Flat Rate</option>
+                            </select>
+                        </div>
+                        <button onclick="addLoan()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded text-sm font-medium transition">+ 新增此類貸款</button>
+                    </div>
+
+                    <!-- Loan Lists -->
+                    <div class="space-y-4">
+                        <div id="listCashLoans" class="space-y-2 max-h-40 overflow-y-auto custom-scroll">
+                            <!-- Cash Loans Injected Here -->
+                        </div>
+                        <div id="listMortgageLoans" class="space-y-2 max-h-40 overflow-y-auto custom-scroll hidden">
+                            <!-- Mortgage Loans Injected Here -->
+                        </div>
+                    </div>
+
+                    <!-- Loan Summary -->
+                    <div class="mt-4 pt-3 border-t border-gray-200 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                        <div>總月供: <span id="totalMonthlyPay" class="font-bold text-gray-900">$0</span></div>
+                        <div>總利息成本: <span id="totalInterestCost" class="font-bold text-orange-600">$0</span></div>
                     </div>
                 </div>
-                <div class="slider-group">
-                    <label>利率模式</label>
-                    <div class="rate-toggle-wrapper">
-                        <div class="rate-toggle-btn active" id="simToggleAPR" onclick="setSimRateMode('APR')">APR</div>
-                        <div class="rate-toggle-btn" id="simToggleFlat" onclick="setSimRateMode('FLAT')">月平息</div>
+
+                <!-- 2. Assets & Investments Section -->
+                <div class="glass-panel p-6 border-t-4 border-emerald-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <span class="bg-emerald-100 text-emerald-600 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">2</span>
+                            資產組合 (Assets)
+                        </h2>
                     </div>
-                    <div class="slider-row">
-                        <input type="range" id="simRateSlider" min="0" max="25" step="0.01" value="8.5" oninput="syncSimRate()">
-                        <input type="number" id="simRateInput" min="0" max="100" step="0.01" value="8.50" oninput="syncSimRateSlider()">
+
+                    <!-- Initial Capital -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">初始自有現金 (不含貸款)</label>
+                        <input type="number" id="initialCash" value="500000" class="w-full p-2 border rounded bg-white text-sm" oninput="calculate()">
                     </div>
-                    <div style="color: #666; font-size: 11px; margin-top: 4px;" id="simConvertedRate"></div>
+
+                    <!-- Add Asset Form -->
+                    <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100 mb-4">
+                        <div class="text-xs font-bold text-emerald-800 mb-2 uppercase tracking-wide">新增投資項目</div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <input type="text" id="newAssetName" placeholder="名稱 (如: 美股ETF)" class="p-2 text-sm border rounded w-full col-span-2">
+                            <input type="number" id="newAssetAmt" placeholder="投入金額" class="p-2 text-sm border rounded w-full">
+                            <input type="number" id="newAssetAppr" placeholder="年升值率 %" step="0.1" class="p-2 text-sm border rounded w-full">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <input type="number" id="newAssetYield" placeholder="年股息/租金 %" step="0.1" class="p-2 text-sm border rounded w-full">
+                            <select id="newAssetFreq" class="p-2 text-sm border rounded w-full bg-white">
+                                <option value="12">月派息/收租</option>
+                                <option value="4">季派息</option>
+                                <option value="2">半年派息</option>
+                                <option value="1">年派息</option>
+                            </select>
+                        </div>
+                        <button onclick="addAsset()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-sm font-medium transition">+ 加入資產組合</button>
+                    </div>
+
+                    <!-- Asset List -->
+                    <div id="assetList" class="space-y-2 max-h-60 overflow-y-auto custom-scroll">
+                        <!-- Assets Injected Here -->
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between text-xs">
+                        <span class="text-gray-500">總投入資本</span>
+                        <span id="totalInvested" class="font-bold text-emerald-700">$0</span>
+                    </div>
+                </div>
+
+                <!-- Saved Scenarios -->
+                <div class="glass-panel p-4 border-l-4 border-purple-500">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-bold text-gray-700">已儲存方案</h3>
+                        <button onclick="clearStorage()" class="text-[10px] text-red-400 hover:text-red-600">清除</button>
+                    </div>
+                    <div id="savedList" class="max-h-32 overflow-y-auto custom-scroll space-y-1 text-xs"></div>
                 </div>
             </div>
 
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <div class="label">每月供款額</div>
-                    <div class="value blue" id="simMonthlyPayment">¥0</div>
+            <!-- RIGHT COLUMN: Visualization -->
+            <div class="xl:col-span-8 space-y-6">
+                
+                <!-- KPI Dashboard -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-panel p-4 border-b-4 border-blue-500">
+                        <div class="text-gray-500 text-[10px] uppercase font-bold">最終總資產價值</div>
+                        <div id="kpiTotalAsset" class="text-lg md:text-xl font-bold text-gray-800 truncate">--</div>
+                    </div>
+                    <div class="glass-panel p-4 border-b-4 border-orange-500">
+                        <div class="text-gray-500 text-[10px] uppercase font-bold">剩餘未還債務</div>
+                        <div id="kpiTotalDebt" class="text-lg md:text-xl font-bold text-orange-600 truncate">--</div>
+                    </div>
+                    <div class="glass-panel p-4 border-b-4 border-emerald-500">
+                        <div class="text-gray-500 text-[10px] uppercase font-bold">真實淨值 (Net Worth)</div>
+                        <div id="kpiNetWorth" class="text-lg md:text-xl font-bold text-emerald-600 truncate">--</div>
+                    </div>
+                    <div class="glass-panel p-4 border-b-4 border-purple-500">
+                        <div class="text-gray-500 text-[10px] uppercase font-bold">綜合槓桿 ROE</div>
+                        <div id="kpiROE" class="text-lg md:text-xl font-bold text-purple-600 truncate">--</div>
+                    </div>
                 </div>
-                <div class="summary-item">
-                    <div class="label">每月利息支出 (固定)</div>
-                    <div class="value red" id="simMonthlyInterest">¥0</div>
+
+                <!-- Main Chart -->
+                <div class="glass-panel p-6 h-[450px] relative">
+                    <canvas id="mainChart"></canvas>
                 </div>
-                <div class="summary-item">
-                    <div class="label">總利息支出</div>
-                    <div class="value red" id="simTotalInterest">¥0</div>
-                </div>
-                <div class="summary-item">
-                    <div class="label">折算 APR</div>
-                    <div class="value yellow" id="simAPRDisplay">0.00%</div>
+
+                <!-- Detailed Breakdown Table -->
+                <div class="glass-panel overflow-hidden">
+                    <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 class="text-sm font-bold text-gray-700">年度現金流與資產拆解</h3>
+                    </div>
+                    <div class="overflow-x-auto max-h-80 overflow-y-auto custom-scroll">
+                        <table class="min-w-full text-xs md:text-sm text-left">
+                            <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-2">年份</th>
+                                    <th class="px-4 py-2">年初淨值</th>
+                                    <th class="px-4 py-2">資產增值</th>
+                                    <th class="px-4 py-2">被動收入</th>
+                                    <th class="px-4 py-2">利息支出</th>
+                                    <th class="px-4 py-2">年末淨值</th>
+                                </tr>
+                            </thead>
+                            <tbody id="breakdownTable" class="divide-y divide-gray-100 bg-white"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="sim-disabled-msg" id="simDisabledMsg" style="display:none;">
-            已有 <span class="highlight" id="simLoanCount">0</span> 筆借貸項目，模擬模組已停用。<br>
-            請刪除所有借貸項目以啟用模擬功能。
         </div>
     </div>
 
-    <!-- Module 3: Investment Return Analysis -->
-    <div class="module">
-        <div class="module-title">
-            <span class="icon green">③</span>
-            投資回報分析
-        </div>
-        <div class="invest-input-group">
-            <label>期望每月投資回報（元）</label>
-            <input type="number" id="monthlyReturnInput" min="0" step="100" placeholder="輸入每月期望回報金額" oninput="calcInvestment()">
-            <div class="invest-error-msg" id="investErrorMsg"></div>
-        </div>
-        <div id="investWarning" class="invest-warning" style="display:none;">
-            ⚠ 請先在「多筆借貸輸入」中輸入借貸金額，或啟用「模擬借貸」設定金額，方可計算投資回報率。
-        </div>
-        <div class="summary-grid" id="investSummary" style="display:none;">
-            <div class="summary-item">
-                <div class="label">總投資金額（基準）</div>
-                <div class="value blue" id="investBase">¥0</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">月回報率</div>
-                <div class="value yellow" id="monthlyReturnRate">0.000%</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">理論年化回報率</div>
-                <div class="value green" id="theoreticalAnnual">0.000%</div>
-            </div>
-            <div class="summary-item">
-                <div class="label">扣除利息後真實回報率</div>
-                <div class="value" id="realReturnRate">0.000%</div>
-            </div>
-        </div>
-    </div>
+    <script>
+        // --- State Management ---
+        const state = {
+            cashLoans: [],
+            mortgageLoans: [],
+            assets: [],
+            initialCash: 500000,
+            years: 10,
+            currentLoanTab: 'cash'
+        };
 
-    <div class="footer-note">
-        計算邏輯：基於 Flat Rate 鎖定利息總額，按時間軸合併現金流 · APR 僅作 IRR 參考
-    </div>
-</div>
+        let chartInstance = null;
+        const STORAGE_KEY = 'proAssetCalc_v2';
 
-<script>
-let loanIdCounter = 0;
-let simRateMode = 'APR';
+        // --- Initialization ---
+        window.onload = () => {
+            loadFromStorage();
+            renderAll();
+            calculate();
+        };
 
-// --- Utility Functions ---
-function formatNumber(num, decimals) {
-    if (isNaN(num) || !isFinite(num)) return '0';
-    return num.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function formatCurrency(num) {
-    if (isNaN(num) || !isFinite(num)) return '¥0';
-    return '¥' + formatNumber(num, 2);
-}
-
-function formatPercent(num, decimals) {
-    if (isNaN(num) || !isFinite(num)) return '0.000%';
-    return formatNumber(num, decimals) + '%';
-}
-
-// Helper: Calculate APR from Monthly Flat Rate using Newton-Raphson / Binary Search
-function calculateAPRFromFlat(flatRateMonthly, months) {
-    if (flatRateMonthly === 0) return 0;
-    
-    // PMT per unit principal = 1/months + flatRateMonthly
-    const pmtPerUnit = (1 / months) + flatRateMonthly;
-    
-    let low = 0;
-    let high = 1; 
-    let mid = 0;
-    
-    for (let i = 0; i < 50; i++) {
-        mid = (low + high) / 2;
-        let pvFactor;
-        if (mid === 0) {
-            pvFactor = months;
-        } else {
-            pvFactor = (1 - Math.pow(1 + mid, -months)) / mid;
-        }
-        
-        const val = pmtPerUnit * pvFactor;
-        
-        if (val > 1) {
-            low = mid;
-        } else {
-            high = mid;
-        }
-    }
-    
-    const apr = (Math.pow(1 + mid, 12) - 1) * 100;
-    return apr;
-}
-
-// --- Module 1: Loan Items (Real Cash Flow Logic) ---
-
-function addLoanItem() {
-    loanIdCounter++;
-    const container = document.getElementById('loanItemsContainer');
-    const div = document.createElement('div');
-    div.className = 'loan-item';
-    div.id = 'loanItem_' + loanIdCounter;
-    
-    div.innerHTML = `
-        <span class="item-number">#${loanIdCounter}</span>
-        <div class="input-group">
-            <label>借貸金額（元）</label>
-            <input type="number" id="amount_${loanIdCounter}" min="0" step="1000" placeholder="100,000" oninput="validateAndCalc()">
-            <div class="error-msg" id="amountErr_${loanIdCounter}"></div>
-        </div>
-        <div class="input-group">
-            <label>還款年期（月）</label>
-            <input type="number" id="term_${loanIdCounter}" min="1" max="120" step="1" placeholder="36" oninput="validateAndCalc()">
-            <div class="error-msg" id="termErr_${loanIdCounter}"></div>
-        </div>
-        <div class="input-group">
-            <label>利率輸入模式</label>
-            <div class="rate-toggle-wrapper">
-                <div class="rate-toggle-btn active" id="toggleAPR_${loanIdCounter}" onclick="switchRateMode(${loanIdCounter}, 'APR')">APR</div>
-                <div class="rate-toggle-btn" id="toggleFlat_${loanIdCounter}" onclick="switchRateMode(${loanIdCounter}, 'FLAT')">月平息</div>
-            </div>
-            <input type="number" id="rate_${loanIdCounter}" min="0" max="100" step="0.01" placeholder="8.50" oninput="handleRateInput(${loanIdCounter})">
-            <div class="error-msg" id="rateErr_${loanIdCounter}"></div>
-            <div style="color: #666; font-size: 10px; margin-top: 2px;" id="convertedRate_${loanIdCounter}"></div>
-        </div>
-        <button class="btn-delete" onclick="deleteLoanItem(${loanIdCounter})" title="刪除">✕</button>
-    `;
-    container.appendChild(div);
-    validateAndCalc();
-}
-
-function deleteLoanItem(id) {
-    const el = document.getElementById('loanItem_' + id);
-    if (el) el.remove();
-    validateAndCalc();
-}
-
-function switchRateMode(id, mode) {
-    const aprBtn = document.getElementById('toggleAPR_' + id);
-    const flatBtn = document.getElementById('toggleFlat_' + id);
-    
-    if (mode === 'APR') {
-        aprBtn.classList.add('active');
-        flatBtn.classList.remove('active');
-    } else {
-        flatBtn.classList.add('active');
-        aprBtn.classList.remove('active');
-    }
-    validateAndCalc();
-}
-
-function handleRateInput(id) {
-    validateAndCalc();
-}
-
-function validateAndCalc() {
-    const items = document.querySelectorAll('.loan-item');
-    let totalPrincipal = 0;
-    let totalLockedInterest = 0;
-    let weightedAPRSum = 0;
-    let maxTerm = 0;
-    
-    // Store valid loan data for timeline calculation
-    let loansData = [];
-
-    items.forEach(item => {
-        const id = item.id.split('_')[1];
-        const amountInput = document.getElementById('amount_' + id);
-        const termInput = document.getElementById('term_' + id);
-        const rateInput = document.getElementById('rate_' + id);
-        const toggleAPR = document.getElementById('toggleAPR_' + id);
-        
-        const amount = parseFloat(amountInput.value);
-        const term = parseFloat(termInput.value);
-        let rateVal = parseFloat(rateInput.value);
-        
-        const amountErr = document.getElementById('amountErr_' + id);
-        const termErr = document.getElementById('termErr_' + id);
-        const rateErr = document.getElementById('rateErr_' + id);
-        const convertedDisplay = document.getElementById('convertedRate_' + id);
-
-        let itemError = false;
-        let isValid = true;
-
-        // Validate Amount
-        if (isNaN(amount) || amount <= 0) {
-            if (amountInput.value !== '') {
-                amountInput.classList.add('input-error');
-                amountErr.textContent = '金額必須 > 0';
-                itemError = true;
-            } else {
-                amountInput.classList.remove('input-error');
-                amountErr.textContent = '';
-            }
-            isValid = false;
-        } else {
-            amountInput.classList.remove('input-error');
-            amountErr.textContent = '';
+        function renderAll() {
+            renderLoanList('cash');
+            renderLoanList('mortgage');
+            renderAssetList();
+            renderSavedList();
+            document.getElementById('initialCash').value = state.initialCash;
         }
 
-        // Validate Term
-        if (isNaN(term) || term <= 0) {
-            if (termInput.value !== '') {
-                termInput.classList.add('input-error');
-                termErr.textContent = '年期必須 > 0';
-                itemError = true;
-            } else {
-                termInput.classList.remove('input-error');
-                termErr.textContent = '';
-            }
-            isValid = false;
-        } else {
-            termInput.classList.remove('input-error');
-            termErr.textContent = '';
+        // --- Loan Logic ---
+
+        function switchLoanTab(tab) {
+            state.currentLoanTab = tab;
+            document.getElementById('tabCash').className = tab === 'cash' 
+                ? "flex-1 py-1.5 text-sm font-medium rounded-md bg-white shadow text-orange-600 transition" 
+                : "flex-1 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 transition";
+            document.getElementById('tabMortgage').className = tab === 'mortgage' 
+                ? "flex-1 py-1.5 text-sm font-medium rounded-md bg-white shadow text-orange-600 transition" 
+                : "flex-1 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 transition";
+            
+            document.getElementById('listCashLoans').classList.toggle('hidden', tab !== 'cash');
+            document.getElementById('listMortgageLoans').classList.toggle('hidden', tab !== 'mortgage');
         }
 
-        // Validate Rate
-        if (isNaN(rateVal) || rateVal < 0) {
-             if (rateInput.value !== '') {
-                rateInput.classList.add('input-error');
-                rateErr.textContent = '利率無效';
-                itemError = true;
-            } else {
-                rateInput.classList.remove('input-error');
-                rateErr.textContent = '';
-            }
-            isValid = false;
-        } else {
-            rateInput.classList.remove('input-error');
-            rateErr.textContent = '';
-        }
+        function addLoan() {
+            const amt = parseFloat(document.getElementById('newLoanAmt').value) || 0;
+            const rate = parseFloat(document.getElementById('newLoanRate').value) || 0;
+            const term = parseInt(document.getElementById('newLoanTerm').value) || 0;
+            const type = document.getElementById('newLoanType').value;
 
-        if (itemError) item.classList.add('error');
-        else item.classList.remove('error');
-
-        if (isValid) {
-            const isAPRMode = toggleAPR.classList.contains('active');
-            let monthlyFlatRate = 0;
-            let effectiveAPR = 0;
-
-            if (isAPRMode) {
-                // Input is APR. Convert to Flat Rate for cash flow calculation.
-                // We need to find the Flat Rate that results in the same PMT as this APR.
-                // PMT_apr = P * r * (1+r)^n / ((1+r)^n - 1) where r is monthly effective.
-                // PMT_flat = P/n + P * flat_monthly.
-                // Equate them to find flat_monthly.
-                
-                const monthlyEff = Math.pow(1 + rateVal/100, 1/12) - 1;
-                effectiveAPR = rateVal;
-                
-                let pmtFactor;
-                if (monthlyEff === 0) pmtFactor = 1/term;
-                else pmtFactor = (monthlyEff * Math.pow(1+monthlyEff, term)) / (Math.pow(1+monthlyEff, term) - 1);
-                
-                // pmtFactor = 1/term + flat_monthly
-                monthlyFlatRate = pmtFactor - (1/term);
-                
-                convertedDisplay.textContent = `約等於月平息: ${(monthlyFlatRate*100).toFixed(3)}%`;
-            } else {
-                // Input is Flat Rate (Monthly %)
-                monthlyFlatRate = rateVal / 100;
-                effectiveAPR = calculateAPRFromFlat(monthlyFlatRate, term);
-                convertedDisplay.textContent = `折算 APR: ${effectiveAPR.toFixed(2)}%`;
+            if (amt <= 0 || term <= 0) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '請輸入有效金額及期數', showConfirmButton: false, timer: 2000 });
+                return;
             }
 
-            // Calculate Locked Interest (Flat Rate Logic)
-            // Total Interest = Principal * MonthlyFlatRate * Term
-            const lockedInterest = amount * monthlyFlatRate * term;
-            const monthlyInterestPayment = amount * monthlyFlatRate; // Constant every month
+            const loan = { id: Date.now(), amount: amt, rate, term, type };
+            
+            if (state.currentLoanTab === 'cash') {
+                state.cashLoans.push(loan);
+            } else {
+                state.mortgageLoans.push(loan);
+            }
 
-            totalPrincipal += amount;
-            totalLockedInterest += lockedInterest;
-            weightedAPRSum += amount * effectiveAPR;
-            if (term > maxTerm) maxTerm = term;
+            // Clear inputs
+            document.getElementById('newLoanAmt').value = '';
+            document.getElementById('newLoanRate').value = '';
+            document.getElementById('newLoanTerm').value = '';
 
-            loansData.push({
-                id: id,
-                principal: amount,
-                term: term,
-                monthlyInterest: monthlyInterestPayment,
-                startMonth: 1,
-                endMonth: term
+            renderLoanList(state.currentLoanTab);
+            calculate();
+        }
+
+        function removeLoan(id, category) {
+            if (category === 'cash') state.cashLoans = state.cashLoans.filter(l => l.id !== id);
+            else state.mortgageLoans = state.mortgageLoans.filter(l => l.id !== id);
+            
+            renderLoanList(category);
+            calculate();
+        }
+
+        function renderLoanList(category) {
+            const container = document.getElementById(category === 'cash' ? 'listCashLoans' : 'listMortgageLoans');
+            const list = category === 'cash' ? state.cashLoans : state.mortgageLoans;
+            
+            container.innerHTML = '';
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 text-xs py-4 italic">暫無${category === 'cash' ? '現金貸' : '房貸'}紀錄</div>`;
+                return;
+            }
+
+            list.forEach(l => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded border border-gray-200 shadow-sm flex justify-between items-center group";
+                div.innerHTML = `
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">${formatMoney(l.amount)}</div>
+                        <div class="text-[10px] text-gray-500">${l.rate}% · ${l.term}個月 · ${l.type.toUpperCase()}</div>
+                    </div>
+                    <button onclick="removeLoan(${l.id}, '${category}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">&times;</button>
+                `;
+                container.appendChild(div);
             });
-        } else {
-            convertedDisplay.textContent = '';
         }
-    });
 
-    const weightedAPR = totalPrincipal > 0 ? weightedAPRSum / totalPrincipal : 0;
-    
-    // Calculate Average Yearly Interest based on Locked Total and Max Term
-    // If no loans, 0. If loans exist, spread total interest over the longest loan duration?
-    // Or simply Total Interest / (MaxTerm / 12).
-    let avgYearly = 0;
-    if (maxTerm > 0) {
-        avgYearly = totalLockedInterest / (maxTerm / 12);
-    }
+        // --- Asset Logic ---
 
-    document.getElementById('totalLoanAmount').textContent = formatCurrency(totalPrincipal);
-    document.getElementById('totalLockedInterest').textContent = formatCurrency(totalLockedInterest);
-    document.getElementById('weightedAPR').textContent = formatPercent(weightedAPR, 3);
-    document.getElementById('avgYearlyInterest').textContent = formatCurrency(avgYearly);
+        function addAsset() {
+            const name = document.getElementById('newAssetName').value.trim() || "未命名資產";
+            const amt = parseFloat(document.getElementById('newAssetAmt').value) || 0;
+            const appr = parseFloat(document.getElementById('newAssetAppr').value) || 0;
+            const yld = parseFloat(document.getElementById('newAssetYield').value) || 0;
+            const freq = parseInt(document.getElementById('newAssetFreq').value) || 12;
 
-    // Generate Timeline
-    generateTimeline(loansData, maxTerm);
-
-    updateSimModule(items.length);
-    calcInvestment();
-}
-
-function generateTimeline(loans, maxTerm) {
-    const tbody = document.getElementById('timelineBody');
-    tbody.innerHTML = '';
-
-    if (loans.length === 0 || maxTerm === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">請輸入有效的借貸項目以查看時間軸</td></tr>';
-        return;
-    }
-
-    // Identify change points (when a loan ends)
-    let changePoints = new Set();
-    changePoints.add(1);
-    changePoints.add(maxTerm + 1); // End marker
-    
-    loans.forEach(loan => {
-        if (loan.endMonth < maxTerm) {
-            changePoints.add(loan.endMonth + 1);
-        }
-    });
-
-    let sortedPoints = Array.from(changePoints).sort((a, b) => a - b);
-    
-    let currentMonth = 1;
-    
-    for (let i = 0; i < sortedPoints.length - 1; i++) {
-        let start = sortedPoints[i];
-        let end = sortedPoints[i+1] - 1;
-        
-        if (start > maxTerm) break;
-        if (end > maxTerm) end = maxTerm;
-
-        // Calculate total monthly interest for this period
-        let periodMonthlyInterest = 0;
-        let activeLoansCount = 0;
-        
-        loans.forEach(loan => {
-            if (start >= loan.startMonth && start <= loan.endMonth) {
-                periodMonthlyInterest += loan.monthlyInterest;
-                activeLoansCount++;
+            if (amt <= 0) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: '投入金額需大於0', showConfirmButton: false, timer: 2000 });
+                return;
             }
-        });
 
-        if (periodMonthlyInterest > 0) {
-            const monthsInPeriod = end - start + 1;
-            const totalInterestInPeriod = periodMonthlyInterest * monthsInPeriod;
-            const yearsInPeriod = monthsInPeriod / 12;
-            const annualizedInterest = totalInterestInPeriod / yearsInPeriod; // Should be same as monthly * 12
+            state.assets.push({
+                id: Date.now(), name, amount: amt, appreciation: appr, yieldRate: yld, freq
+            });
 
-            const row = document.createElement('tr');
-            if (i % 2 === 0) row.className = 'highlight-row';
-            
-            let note = '';
-            if (activeLoansCount === loans.length) note = '全額並存期';
-            else if (activeLoansCount === 1) note = '僅剩一筆貸款';
-            else note = `${activeLoansCount} 筆貸款並存`;
+            // Reset inputs
+            document.getElementById('newAssetName').value = '';
+            document.getElementById('newAssetAmt').value = '';
+            document.getElementById('newAssetAppr').value = '';
+            document.getElementById('newAssetYield').value = '';
 
-            row.innerHTML = `
-                <td>階段 ${i+1}</td>
-                <td>第 ${start} - ${end} 月</td>
-                <td class="val-red">${formatCurrency(periodMonthlyInterest)}</td>
-                <td class="val-red">${formatCurrency(periodMonthlyInterest * 12)}</td>
-                <td style="color:#888; font-size:11px;">${note}</td>
-            `;
-            tbody.appendChild(row);
+            renderAssetList();
+            calculate();
         }
-    }
-}
 
-
-// --- Module 2: Simulation ---
-
-function updateSimModule(loanCount) {
-    const simContent = document.getElementById('simModuleContent');
-    const simDisabled = document.getElementById('simDisabledMsg');
-
-    if (loanCount > 0) {
-        simContent.style.display = 'none';
-        simDisabled.style.display = 'block';
-        document.getElementById('simLoanCount').textContent = loanCount;
-    } else {
-        simContent.style.display = 'block';
-        simDisabled.style.display = 'none';
-        calcSimLoan();
-    }
-}
-
-function setSimRateMode(mode) {
-    simRateMode = mode;
-    document.getElementById('simToggleAPR').className = 'rate-toggle-btn ' + (mode === 'APR' ? 'active' : '');
-    document.getElementById('simToggleFlat').className = 'rate-toggle-btn ' + (mode === 'FLAT' ? 'active' : '');
-    
-    const slider = document.getElementById('simRateSlider');
-    if (mode === 'FLAT') {
-        slider.max = 5; 
-    } else {
-        slider.max = 25;
-    }
-    calcSimLoan();
-}
-
-function syncSimAmount() {
-    document.getElementById('simAmountInput').value = document.getElementById('simAmountSlider').value;
-    calcSimLoan();
-}
-
-function syncSimSlider() {
-    let val = parseFloat(document.getElementById('simAmountInput').value);
-    if (val < 0) val = 0;
-    if (val > 5000000) val = 5000000;
-    document.getElementById('simAmountSlider').value = val;
-    calcSimLoan();
-}
-
-function syncSimTerm() {
-    document.getElementById('simTermInput').value = document.getElementById('simTermSlider').value;
-    calcSimLoan();
-}
-
-function syncSimTermSlider() {
-    let val = parseInt(document.getElementById('simTermInput').value);
-    if (val < 1) val = 1;
-    document.getElementById('simTermSlider').value = val;
-    calcSimLoan();
-}
-
-function syncSimRate() {
-    const slider = document.getElementById('simRateSlider');
-    document.getElementById('simRateInput').value = parseFloat(slider.value).toFixed(2);
-    calcSimLoan();
-}
-
-function syncSimRateSlider() {
-    const input = document.getElementById('simRateInput');
-    let val = parseFloat(input.value);
-    if (isNaN(val)) val = 0;
-    if (val < 0) val = 0;
-    const max = parseFloat(document.getElementById('simRateSlider').max);
-    if (val > max) val = max;
-    document.getElementById('simRateSlider').value = val;
-    calcSimLoan();
-}
-
-function calcSimLoan() {
-    const amount = parseFloat(document.getElementById('simAmountInput').value) || 0;
-    const term = parseInt(document.getElementById('simTermInput').value) || 36;
-    const inputRate = parseFloat(document.getElementById('simRateInput').value) || 0;
-    
-    let apr = 0;
-    let monthlyFlat = 0;
-    let displayConversion = '';
-    let monthlyPayment = 0;
-    let monthlyInterest = 0;
-    let totalInterest = 0;
-
-    if (simRateMode === 'APR') {
-        apr = inputRate;
-        const monthlyEff = Math.pow(1 + apr/100, 1/12) - 1;
-        
-        if (apr === 0) {
-            monthlyPayment = amount / term;
-            monthlyInterest = 0;
-            totalInterest = 0;
-        } else {
-            const factor = Math.pow(1 + monthlyEff, term);
-            monthlyPayment = amount * monthlyEff * factor / (factor - 1);
-            totalInterest = (monthlyPayment * term) - amount;
-            // For APR mode, interest decreases. But for comparison with Flat, 
-            // we show the first month interest or average? 
-            // Let's show First Month Interest for consistency with "Cash Flow" start.
-            monthlyInterest = amount * monthlyEff;
+        function removeAsset(id) {
+            state.assets = state.assets.filter(a => a.id !== id);
+            renderAssetList();
+            calculate();
         }
-        
-        // Approximate Flat Rate for display
-        const annualFlat = (totalInterest / amount) / (term / 12) * 100;
-        displayConversion = `約等於年平息: ${annualFlat.toFixed(2)}%`;
-        
-    } else {
-        // Mode is FLAT (Monthly)
-        monthlyFlat = inputRate / 100;
-        apr = calculateAPRFromFlat(monthlyFlat, term);
-        displayConversion = `折算 APR: ${apr.toFixed(2)}%`;
-        
-        // Flat Rate Calculations
-        monthlyInterest = amount * monthlyFlat;
-        const principalPart = amount / term;
-        monthlyPayment = principalPart + monthlyInterest;
-        totalInterest = monthlyInterest * term;
-    }
 
-    document.getElementById('simMonthlyPayment').textContent = formatCurrency(monthlyPayment);
-    document.getElementById('simMonthlyInterest').textContent = formatCurrency(monthlyInterest);
-    document.getElementById('simTotalInterest').textContent = formatCurrency(totalInterest);
-    document.getElementById('simAPRDisplay').textContent = formatPercent(apr, 2);
-    document.getElementById('simConvertedRate').textContent = displayConversion;
-}
-
-
-// --- Module 3: Investment ---
-
-function calcInvestment() {
-    const monthlyReturn = parseFloat(document.getElementById('monthlyReturnInput').value);
-    const investWarning = document.getElementById('investWarning');
-    const investSummary = document.getElementById('investSummary');
-    const investErrorMsg = document.getElementById('investErrorMsg');
-    const monthlyReturnInput = document.getElementById('monthlyReturnInput');
-
-    const items = document.querySelectorAll('.loan-item');
-    let baseAmount = 0;
-    let weightedAPR = 0;
-
-    if (items.length > 0) {
-        let totalAmt = 0;
-        let weightedSum = 0;
-        
-        items.forEach(item => {
-            const id = item.id.split('_')[1];
-            const amount = parseFloat(document.getElementById('amount_' + id).value);
-            const term = parseFloat(document.getElementById('term_' + id).value);
-            const rateVal = parseFloat(document.getElementById('rate_' + id).value);
-            const isAPR = document.getElementById('toggleAPR_' + id).classList.contains('active');
+        function renderAssetList() {
+            const container = document.getElementById('assetList');
+            container.innerHTML = '';
             
-            if (!isNaN(amount) && amount > 0 && !isNaN(term) && term > 0 && !isNaN(rateVal) && rateVal >= 0) {
-                let effAPR = 0;
-                if (isAPR) {
-                    effAPR = rateVal;
-                } else {
-                    effAPR = calculateAPRFromFlat(rateVal/100, term);
+            if (state.assets.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 text-xs py-4 italic">尚未添加任何投資項目</div>`;
+                document.getElementById('totalInvested').innerText = "$0";
+                return;
+            }
+
+            let total = 0;
+            state.assets.forEach(a => {
+                total += a.amount;
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded border border-emerald-100 shadow-sm flex justify-between items-start group";
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-gray-800 text-sm">${a.name}</span>
+                            <span class="asset-tag bg-emerald-100 text-emerald-700">升值 ${a.appreciation}%</span>
+                            <span class="asset-tag bg-blue-100 text-blue-700">息率 ${a.yieldRate}%</span>
+                        </div>
+                        <div class="text-xs text-gray-500">本金: ${formatMoney(a.amount)} · ${a.freq}次/年派息</div>
+                    </div>
+                    <button onclick="removeAsset(${a.id})" class="text-gray-300 hover:text-red-500 ml-2">&times;</button>
+                `;
+                container.appendChild(div);
+            });
+            document.getElementById('totalInvested').innerText = formatMoney(total);
+        }
+
+        // --- Core Calculation Engine ---
+
+        function calculate() {
+            state.initialCash = parseFloat(document.getElementById('initialCash').value) || 0;
+            const allLoans = [...state.cashLoans, ...state.mortgageLoans];
+            
+            // 1. Calculate Loan Schedules (Monthly)
+            // We need max months to determine simulation length
+            const maxLoanMonths = allLoans.reduce((max, l) => Math.max(max, l.term), 0);
+            const simMonths = Math.max(maxLoanMonths, state.years * 12); // Simulate at least 'years' or until debt free
+
+            // Prepare monthly trackers
+            let monthlyDebtService = new Array(simMonths).fill(0); // Principal + Interest
+            let monthlyInterestOnly = new Array(simMonths).fill(0);
+            let remainingDebtBalance = new Array(simMonths).fill(0);
+
+            // Initialize debt balance
+            let currentTotalDebt = allLoans.reduce((sum, l) => sum + l.amount, 0);
+            
+            // Process each loan
+            allLoans.forEach(loan => {
+                const schedule = generateAmortization(loan);
+                let bal = loan.amount;
+                for(let m=0; m<simMonths; m++) {
+                    if (m < loan.term) {
+                        monthlyDebtService[m] += schedule[m].total;
+                        monthlyInterestOnly[m] += schedule[m].interest;
+                        bal -= schedule[m].principal;
+                    }
+                    // Note: This simple aggregation assumes we track total debt correctly
+                    // For precise remaining balance array, we'd sum individual balances
                 }
-                
-                totalAmt += amount;
-                weightedSum += amount * effAPR;
+            });
+
+            // Recalculate precise remaining debt balance array
+            let tempBal = currentTotalDebt;
+            for(let m=0; m<simMonths; m++) {
+                const principalPaid = monthlyDebtService[m] - monthlyInterestOnly[m];
+                tempBal -= principalPaid;
+                remainingDebtBalance[m] = Math.max(0, tempBal);
             }
-        });
-        
-        baseAmount = totalAmt;
-        weightedAPR = totalAmt > 0 ? weightedSum / totalAmt : 0;
-    } else {
-        baseAmount = parseFloat(document.getElementById('simAmountInput').value) || 0;
-        const simInputRate = parseFloat(document.getElementById('simRateInput').value) || 0;
-        const simTerm = parseInt(document.getElementById('simTermInput').value) || 36;
-        
-        if (simRateMode === 'APR') {
-            weightedAPR = simInputRate;
-        } else {
-            weightedAPR = calculateAPRFromFlat(simInputRate/100, simTerm);
+
+            // 2. Simulate Asset Growth & Income (Monthly)
+            let assetValues = state.assets.map(a => ({ ...a, currentValue: a.amount }));
+            let totalAssetValueArr = new Array(simMonths).fill(0);
+            let totalIncomeArr = new Array(simMonths).fill(0);
+            let totalAppreciationArr = new Array(simMonths).fill(0);
+
+            // Initial Total Assets = Own Cash + Loan Cash (Assuming all loans are drawn down at T=0 and invested)
+            // Note: In this model, we assume user invests the borrowed money immediately into the defined assets
+            // If Own Cash + Loans > Sum of Assets defined, the remainder sits as cash (0% return for simplicity or could add cash asset)
+            
+            // For simplicity in this UI: We track the SPECIFIC assets added. 
+            // The "Net Worth" = (Sum of Specific Assets + Remaining Own Cash) - Debt
+            // But usually users want to see "If I borrow X and put into Y".
+            // Let's assume: Total Investable Capital = Initial Cash + Total Loans
+            // And user allocates them into the Asset List.
+            
+            // To be safe, we just simulate the ASSETS LIST provided.
+            // Net Worth = (Initial Cash + Total Loans - Total Debt Paid So Far) ?? No.
+            // Net Worth = (Current Value of All Assets) - (Remaining Debt)
+            // Wait, where did the money come from? 
+            // Equity = Assets - Liabilities.
+            // If I have 500k cash, borrow 500k, buy 1M house. Asset=1M, Debt=500k, Equity=500k.
+            // So we just simulate the growth of the ASSET LIST.
+            
+            // Check if Total Assets defined matches Capital Available? 
+            // We will just simulate what is in the list. User responsibility to match funding.
+
+            for(let m=0; m<simMonths; m++) {
+                let monthAssetVal = 0;
+                let monthIncome = 0;
+                let monthAppr = 0;
+
+                assetValues.forEach(asset => {
+                    // Appreciation (Compounded monthly)
+                    const monthlyApprRate = Math.pow(1 + asset.appreciation/100, 1/12) - 1;
+                    const valIncrease = asset.currentValue * monthlyApprRate;
+                    asset.currentValue += valIncrease;
+                    monthAppr += valIncrease;
+
+                    // Income (Based on frequency)
+                    // Simple approach: Annual Yield / 12, paid if month % (12/freq) == 0
+                    // Or smoother: Just divide annual yield by 12 for chart smoothness
+                    // Let's do smooth for chart, accurate for table
+                    const monthlyYield = asset.currentValue * (asset.yieldRate / 100) / 12;
+                    monthIncome += monthlyYield;
+
+                    monthAssetVal += asset.currentValue;
+                });
+
+                totalAssetValueArr[m] = monthAssetVal;
+                totalIncomeArr[m] = monthIncome;
+                totalAppreciationArr[m] = monthAppr;
+            }
+
+            // 3. Aggregate Yearly Data for Chart & Table
+            const labels = ["現在"];
+            const dataNetWorth = [state.initialCash + allLoans.reduce((s,l)=>s+l.amount,0) - currentTotalDebt]; // Initial NW = Own Cash (assuming assets listed = own cash + loans)
+            // Actually, simpler: Initial NW = Own Cash. (Loans cancel out with invested assets initially)
+            // But if user didn't allocate all funds to assets, it's tricky.
+            // Let's assume: Initial NW = Own Cash.
+            const initialNW = state.initialCash; 
+            
+            const chartNetWorth = [initialNW];
+            const chartAssets = [state.assets.reduce((s,a)=>s+a.amount, 0)]; // Initial asset value
+            const chartDebt = [currentTotalDebt];
+
+            const tableData = [];
+            let cumIncome = 0;
+            let cumInterest = 0;
+            let cumAppr = 0;
+            let prevNW = initialNW;
+
+            // Adjust initial asset value to match reality if needed, but let's trust user input
+            // If User has 500k cash, borrows 500k, but only adds 800k assets -> 200k cash unaccounted.
+            // We will add a virtual "Cash Balance" asset implicitly? 
+            // For now, strictly follow: NW = Defined Assets - Defined Debts.
+            // Correction: NW should include the uninvested cash too.
+            // Uninvested Cash = (OwnCash + Loans) - Sum(Assets)
+            const totalCapital = state.initialCash + currentTotalDebt;
+            const definedAssetBase = state.assets.reduce((s,a)=>s+a.amount, 0);
+            let idleCash = totalCapital - definedAssetBase; 
+
+            for(let y=1; y<=state.years; y++) {
+                const endMonthIdx = y * 12 - 1;
+                if (endMonthIdx >= simMonths) break;
+
+                // Sum up monthly flows for this year
+                let yrIncome = 0, yrInterest = 0, yrAppr = 0;
+                for(let m=(y-1)*12; m<y*12; m++) {
+                    yrIncome += totalIncomeArr[m];
+                    yrInterest += monthlyInterestOnly[m];
+                    yrAppr += totalAppreciationArr[m];
+                }
+
+                // Idle cash grows at 0% (or could add savings rate later)
+                // Reinvest income? Assume income is withdrawn or reinvested at same rate?
+                // For simplicity: Income adds to NW, Interest subtracts from NW.
+                // Asset Value already includes appreciation.
+                
+                const currentAssetVal = totalAssetValueArr[endMonthIdx] + idleCash; // Idle cash stays flat
+                const currentDebtVal = remainingDebtBalance[endMonthIdx];
+                const currentNW = currentAssetVal - currentDebtVal;
+
+                labels.push(`第 ${y} 年`);
+                chartNetWorth.push(currentNW);
+                chartAssets.push(currentAssetVal);
+                chartDebt.push(currentDebtVal);
+
+                tableData.push({
+                    year: y,
+                    startNW: prevNW,
+                    appreciation: yrAppr,
+                    income: yrIncome,
+                    interest: yrInterest,
+                    endNW: currentNW
+                });
+
+                prevNW = currentNW;
+                cumIncome += yrIncome;
+                cumInterest += yrInterest;
+            }
+
+            // Update KPIs
+            const finalNW = chartNetWorth[chartNetWorth.length-1];
+            const roe = initialNW > 0 ? ((finalNW - initialNW) / initialNW * 100).toFixed(1) : "0.0";
+            
+            document.getElementById('kpiTotalAsset').innerText = formatMoney(chartAssets[chartAssets.length-1]);
+            document.getElementById('kpiTotalDebt').innerText = formatMoney(chartDebt[chartDebt.length-1]);
+            document.getElementById('kpiNetWorth').innerText = formatMoney(finalNW);
+            document.getElementById('kpiROE').innerText = roe + "%";
+
+            // Loan Summary
+            const totalMonthly = monthlyDebtService.length > 0 ? monthlyDebtService[0] : 0; // First month payment
+            const totalInt = monthlyInterestOnly.reduce((a,b)=>a+b, 0);
+            document.getElementById('totalMonthlyPay').innerText = formatMoney(totalMonthly);
+            document.getElementById('totalInterestCost').innerText = formatMoney(totalInt);
+
+            renderChart(labels, chartAssets, chartNetWorth, chartDebt);
+            renderTable(tableData);
         }
-    }
 
-    if (monthlyReturnInput.value !== '' && (isNaN(monthlyReturn) || monthlyReturn < 0)) {
-        monthlyReturnInput.classList.add('input-error');
-        investErrorMsg.textContent = '回報金額不可為負值';
-        investWarning.style.display = 'none';
-        investSummary.style.display = 'none';
-        return;
-    } else {
-        monthlyReturnInput.classList.remove('input-error');
-        investErrorMsg.textContent = '';
-    }
+        function generateAmortization(loan) {
+            const schedule = [];
+            const r = loan.rate / 100 / 12;
+            let balance = loan.amount;
+            
+            if (loan.type === 'flat') {
+                const monthlyPrincipal = loan.amount / loan.term;
+                const monthlyInterest = loan.amount * (loan.rate / 100) / 12;
+                for(let i=0; i<loan.term; i++) {
+                    schedule.push({ principal: monthlyPrincipal, interest: monthlyInterest, total: monthlyPrincipal + monthlyInterest });
+                }
+            } else {
+                const pmt = r === 0 ? loan.amount/loan.term : loan.amount * (r * Math.pow(1+r, loan.term)) / (Math.pow(1+r, loan.term) - 1);
+                for(let i=0; i<loan.term; i++) {
+                    const interest = balance * r;
+                    const principal = pmt - interest;
+                    balance -= principal;
+                    schedule.push({ principal, interest, total: pmt });
+                }
+            }
+            return schedule;
+        }
 
-    if (baseAmount <= 0) {
-        investWarning.style.display = 'block';
-        investSummary.style.display = 'none';
-        return;
-    }
+        // --- Visualization ---
 
-    investWarning.style.display = 'none';
+        function renderChart(labels, assets, nw, debt) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
 
-    if (isNaN(monthlyReturn) || monthlyReturnInput.value === '') {
-        investSummary.style.display = 'none';
-        return;
-    }
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '總資產價值', data: assets, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 2, fill: true, tension: 0.3 },
+                        { label: '真實淨值', data: nw, borderColor: '#4f46e5', borderWidth: 3, fill: false, tension: 0.3 },
+                        { label: '未償還債務', data: debt, borderColor: '#f97316', borderDash: [5,5], borderWidth: 2, fill: false, tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${formatMoney(c.parsed.y)}` } } },
+                    scales: { y: { ticks: { callback: v => '$'+(v/1000).toFixed(0)+'k' } } }
+                }
+            });
+        }
 
-    investSummary.style.display = 'grid';
+        function renderTable(data) {
+            const tbody = document.getElementById('breakdownTable');
+            tbody.innerHTML = '';
+            data.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="px-4 py-2 font-medium">第 ${r.year} 年</td>
+                    <td class="px-4 py-2 text-gray-600">${formatMoney(r.startNW)}</td>
+                    <td class="px-4 py-2 text-emerald-600">+${formatMoney(r.appreciation)}</td>
+                    <td class="px-4 py-2 text-blue-600">+${formatMoney(r.income)}</td>
+                    <td class="px-4 py-2 text-orange-600">-${formatMoney(r.interest)}</td>
+                    <td class="px-4 py-2 font-bold text-gray-800">${formatMoney(r.endNW)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-    const monthlyReturnRate = monthlyReturn / baseAmount;
-    const theoreticalAnnual = (Math.pow(1 + monthlyReturnRate, 12) - 1) * 100;
-    const realReturn = theoreticalAnnual - weightedAPR;
+        // --- Utilities ---
 
-    document.getElementById('investBase').textContent = formatCurrency(baseAmount);
-    document.getElementById('monthlyReturnRate').textContent = formatPercent(monthlyReturnRate * 100, 3);
-    document.getElementById('theoreticalAnnual').textContent = formatPercent(theoreticalAnnual, 3);
+        function formatMoney(n) {
+            return new Intl.NumberFormat('zh-HK', { style: 'currency', currency: 'HKD', maximumFractionDigits: 0 }).format(n);
+        }
 
-    const realReturnEl = document.getElementById('realReturnRate');
-    realReturnEl.textContent = formatPercent(realReturn, 3);
-    realReturnEl.className = 'value ' + (realReturn >= 0 ? 'green' : 'red');
-}
+        async function saveScenario() {
+            const scenarios = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if(scenarios.length >= 5) { Swal.fire('儲存已滿', '請刪除舊方案', 'warning'); return; }
+            
+            const { value: name } = await Swal.fire({ title: '儲存方案', input: 'text', inputPlaceholder: '例如: 2024 倫敦買樓計劃', confirmButtonColor: '#4f46e5' });
+            if(name) {
+                scenarios.push({ name, date: new Date().toLocaleDateString(), state: JSON.parse(JSON.stringify(state)) });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+                renderSavedList();
+                Swal.fire({toast:true, position:'top-end', icon:'success', title:'已儲存', showConfirmButton:false, timer:1500});
+            }
+        }
 
-// Initialize
-addLoanItem();
-calcSimLoan();
-</script>
+        function loadScenario(idx) {
+            const scenarios = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if(scenarios[idx]) {
+                Object.assign(state, scenarios[idx].state);
+                renderAll();
+                calculate();
+            }
+        }
 
+        function deleteScenario(e, idx) {
+            e.stopPropagation();
+            const scenarios = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            scenarios.splice(idx, 1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+            renderSavedList();
+        }
+
+        function clearStorage() {
+            if(confirm("確定清除所有儲存?")) { localStorage.removeItem(STORAGE_KEY); renderSavedList(); }
+        }
+
+        function resetAll() {
+            if(confirm("重置所有輸入?")) {
+                state.cashLoans = []; state.mortgageLoans = []; state.assets = []; state.initialCash = 500000;
+                renderAll(); calculate();
+            }
+        }
+
+        function renderSavedList() {
+            const c = document.getElementById('savedList');
+            const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            c.innerHTML = list.length ? '' : '<div class="text-gray-400 italic text-center py-2">無紀錄</div>';
+            list.forEach((item, i) => {
+                const d = document.createElement('div');
+                d.className = "flex justify-between items-center p-2 bg-gray-50 hover:bg-indigo-50 rounded cursor-pointer border border-transparent hover:border-indigo-200";
+                d.onclick = () => loadScenario(i);
+                d.innerHTML = `<div><div class="font-bold text-gray-700">${item.name}</div><div class="text-[10px] text-gray-400">${item.date}</div></div><button onclick="deleteScenario(event, ${i})" class="text-gray-400 hover:text-red-500">&times;</button>`;
+                c.appendChild(d);
+            });
+        }
+    </script>
 </body>
 </html>
